@@ -144,7 +144,18 @@
     }
     button:hover { transform: translateY(-1px); }
     button:active { transform: translateY(0); box-shadow: 0 4px 14px rgba(17,24,39,0.25); }
+    button:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
     .muted { color: var(--muted); }
+    .status {
+      margin-top: 0.5rem;
+      font-weight: 700;
+    }
+    .status.success { color: #047857; }
+    .status.error { color: #b91c1c; }
     .quick-links {
       display: flex;
       gap: 1rem;
@@ -199,7 +210,7 @@
     </p>
 
     <div class="quick-links">
-      <a class="pill-link" href="mailto:pavlosroumeliotis@gmail.com?subject=App%20support" data-i18n="link_email">📧 Email us</a>
+      <a class="pill-link" href="#support-form" data-i18n="link_email">📧 Email us</a>
       <a class="pill-link" href="privacy-policy.html" data-i18n="link_privacy">🔒 Privacy Policy</a>
       <a class="pill-link" href="terms-and-conditions.html" data-i18n="link_terms">📄 Terms &amp; Conditions</a>
     </div>
@@ -256,7 +267,7 @@
             ></textarea>
           </div>
           <button type="submit" data-i18n="button_send">Send email</button>
-          <p class="muted" data-i18n="form_notice">Submitting will open your default email app with the details pre-filled.</p>
+          <p id="form-status" class="muted status" aria-live="polite"></p>
         </form>
       </section>
     </div>
@@ -284,7 +295,9 @@
         placeholder_topic: "E.g. Cannot log in",
         placeholder_message: "Describe the issue or question",
         button_send: "Send email",
-        form_notice: "Submitting will open your default email app with the details pre-filled.",
+        button_sending: "Sending...",
+        status_success: "Thanks! Your message has been sent.",
+        status_error: "Something went wrong. Please try again.",
       },
       el: {
         brand: "Υποστήριξη Pantzitzifiakos FC",
@@ -306,11 +319,17 @@
         placeholder_topic: "Π.χ. Δεν μπορώ να συνδεθώ",
         placeholder_message: "Περιγράψτε το πρόβλημα ή την ερώτηση",
         button_send: "Αποστολή email",
-        form_notice: "Η υποβολή θα ανοίξει την προεπιλεγμένη εφαρμογή email με προσυμπληρωμένα στοιχεία.",
+        button_sending: "Γίνεται αποστολή...",
+        status_success: "Ευχαριστούμε! Το μήνυμα εστάλη.",
+        status_error: "Κάτι πήγε στραβά. Προσπαθήστε ξανά.",
       },
     };
 
     const langSelect = document.getElementById("language");
+    const submitButton = document.querySelector('#support-form button[type="submit"]');
+    const statusEl = document.getElementById("form-status");
+    const FORM_ENDPOINT = "https://formsubmit.co/ajax/pavlosroumeliotis@gmail.com";
+    let isSending = false;
 
     function applyLanguage(lang) {
       const dict = i18n[lang] || i18n.en;
@@ -327,6 +346,17 @@
           el.setAttribute("placeholder", dict[key]);
         }
       });
+      if (submitButton && !isSending) {
+        submitButton.textContent = dict.button_send || "Send email";
+      }
+      if (statusEl && statusEl.textContent) {
+        const statusKey = statusEl.classList.contains("error")
+          ? "status_error"
+          : "status_success";
+        if (dict[statusKey]) {
+          statusEl.textContent = dict[statusKey];
+        }
+      }
       localStorage.setItem("support_lang", lang);
     }
 
@@ -342,6 +372,14 @@
     langSelect.addEventListener("change", (e) => applyLanguage(e.target.value));
 
     const form = document.getElementById("support-form");
+
+    function setStatus(message, type) {
+      if (!statusEl) return;
+      statusEl.textContent = message;
+      statusEl.classList.remove("success", "error");
+      if (type) statusEl.classList.add(type);
+    }
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const name = document.getElementById("name").value.trim();
@@ -349,17 +387,41 @@
       const topic = document.getElementById("topic").value.trim();
       const message = document.getElementById("message").value.trim();
 
-      const subject = encodeURIComponent(`Support: ${topic || "General"}`);
-      const bodyLines = [
-        name ? `Name: ${name}` : null,
-        email ? `Email: ${email}` : null,
-        topic ? `Topic: ${topic}` : null,
-        "",
-        message || "",
-      ].filter(Boolean);
+      const dict = i18n[langSelect.value] || i18n.en;
+      isSending = true;
+      submitButton.disabled = true;
+      submitButton.textContent = dict.button_sending || "Sending...";
+      setStatus("", "");
 
-      const mailto = `mailto:pavlosroumeliotis@gmail.com?subject=${subject}&body=${encodeURIComponent(bodyLines.join("\n"))}`;
-      window.location.href = mailto;
+      fetch(FORM_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          subject: topic || "General",
+          message,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Network response was not ok");
+          return response.json();
+        })
+        .then(() => {
+          setStatus(dict.status_success, "success");
+          form.reset();
+        })
+        .catch(() => {
+          setStatus(dict.status_error, "error");
+        })
+        .finally(() => {
+          isSending = false;
+          submitButton.disabled = false;
+          submitButton.textContent = dict.button_send || "Send email";
+        });
     });
   </script>
 </body>
