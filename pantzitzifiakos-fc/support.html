@@ -394,10 +394,18 @@
       if (type) statusEl.classList.add(type);
     }
 
+    function isEmailValid() {
+      if (!emailInput) return false;
+      const value = emailInput.value.trim();
+      return Boolean(value) && emailInput.checkValidity();
+    }
+
     function isFormComplete() {
-      return [nameInput, emailInput, topicInput, messageInput].every(
+      const fieldsFilled = [nameInput, topicInput, messageInput].every(
         (field) => field && field.value.trim()
       );
+
+      return fieldsFilled && isEmailValid();
     }
 
     function updateSubmitState() {
