@@ -330,6 +330,10 @@
     const langSelect = document.getElementById("language");
     const submitButton = document.querySelector('#support-form button[type="submit"]');
     const statusEl = document.getElementById("form-status");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const topicInput = document.getElementById("topic");
+    const messageInput = document.getElementById("message");
     const FORM_ENDPOINT = "https://formsubmit.co/ajax/pavlosroumeliotis@gmail.com";
     let isSending = false;
 
@@ -373,6 +377,12 @@
 
     langSelect.addEventListener("change", (e) => applyLanguage(e.target.value));
 
+    [nameInput, emailInput, topicInput, messageInput].forEach((field) => {
+      if (field) {
+        field.addEventListener("input", updateSubmitState);
+      }
+    });
+
     const form = document.getElementById("support-form");
 
     function setStatus(message, type) {
@@ -381,6 +391,19 @@
       statusEl.classList.remove("success", "error");
       if (type) statusEl.classList.add(type);
     }
+
+    function isFormComplete() {
+      return [nameInput, emailInput, topicInput, messageInput].every(
+        (field) => field && field.value.trim()
+      );
+    }
+
+    function updateSubmitState() {
+      if (!submitButton) return;
+      submitButton.disabled = isSending || !isFormComplete();
+    }
+
+    updateSubmitState();
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -421,8 +444,8 @@
         })
         .finally(() => {
           isSending = false;
-          submitButton.disabled = false;
           submitButton.textContent = dict.button_send || "Send email";
+          updateSubmitState();
         });
     });
   </script>
