@@ -212,19 +212,48 @@
         <form id="support-form">
           <div class="form-group">
             <label for="name" data-i18n="label_name">Name</label>
-            <input id="name" name="name" type="text" autocomplete="name" placeholder="Alex Papadopoulos" required />
+            <input
+              id="name"
+              name="name"
+              type="text"
+              autocomplete="name"
+              placeholder="George Papadopoulos"
+              data-i18n-placeholder="placeholder_name"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="email" data-i18n="label_email">Email</label>
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              data-i18n-placeholder="placeholder_email"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="topic" data-i18n="label_topic">Topic</label>
-            <input id="topic" name="topic" type="text" placeholder="E.g. Cannot log in" required />
+            <input
+              id="topic"
+              name="topic"
+              type="text"
+              placeholder="E.g. Cannot log in"
+              data-i18n-placeholder="placeholder_topic"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="message" data-i18n="label_message">Message</label>
-            <textarea id="message" name="message" placeholder="Describe the issue or question" required></textarea>
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Describe the issue or question"
+              data-i18n-placeholder="placeholder_message"
+              required
+            ></textarea>
           </div>
           <button type="submit" data-i18n="button_send">Send email</button>
           <p class="muted" data-i18n="form_notice">Submitting will open your default email app with the details pre-filled.</p>
@@ -250,6 +279,10 @@
         label_email: "Email",
         label_topic: "Topic",
         label_message: "Message",
+        placeholder_name: "George Papadopoulos",
+        placeholder_email: "you@example.com",
+        placeholder_topic: "E.g. Cannot log in",
+        placeholder_message: "Describe the issue or question",
         button_send: "Send email",
         form_notice: "Submitting will open your default email app with the details pre-filled.",
       },
@@ -268,6 +301,10 @@
         label_email: "Email",
         label_topic: "Θέμα",
         label_message: "Μήνυμα",
+        placeholder_name: "Γιώργος Παπαδόπουλος",
+        placeholder_email: "you@example.com",
+        placeholder_topic: "Π.χ. Δεν μπορώ να συνδεθώ",
+        placeholder_message: "Περιγράψτε το πρόβλημα ή την ερώτηση",
         button_send: "Αποστολή email",
         form_notice: "Η υποβολή θα ανοίξει την προεπιλεγμένη εφαρμογή email με προσυμπληρωμένα στοιχεία.",
       },
@@ -282,6 +319,12 @@
         const key = el.getAttribute("data-i18n");
         if (dict[key] !== undefined) {
           el.innerHTML = dict[key];
+        }
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (dict[key] !== undefined) {
+          el.setAttribute("placeholder", dict[key]);
         }
       });
       localStorage.setItem("support_lang", lang);
